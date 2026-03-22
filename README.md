@@ -1,4 +1,4 @@
-# Taska v2 — Интеллектуальный менеджер задач
+# Taska — Интеллектуальный менеджер задач
 
 React + Vite + Tailwind CSS + React Router + Supabase (PostgREST)
 
