@@ -1,0 +1,23 @@
+# python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# virtualenv
+venv/
+.env/
+
+# env
+.env
+.env.example
+
+# IDE
+.vscode/
+.idea/
+
+# logs
+*.log
+
+# system
+.DS_Store

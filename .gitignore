@@ -1,0 +1,25 @@
+# macOS
+.DS_Store
+
+# Node / Vite
+node_modules/
+dist/
+.vite/
+
+# Env files
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+llm-module/.env
+
+# Python
+__pycache__/
+*.py[cod]
+.pytest_cache/
+venv/
+.venv/
+
+# Optional: hide env template too
+.env.example

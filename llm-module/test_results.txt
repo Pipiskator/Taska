@@ -1,0 +1,255 @@
+curl http://127.0.0.1:8000/llm/health
+
+{"status":"ok"}
+
+curl -X POST http://127.0.0.1:8000/llm/chat \
+-H "Content-Type: application/json" \
+-d '{
+  "user_message": "Разбей задачу по разработке API на несколько подзадач",
+  "context": {
+    "project": {
+      "project_id": "c1c36e3a-8a27-4e3b-9f8f-7a6a65c2b4b0",
+      "project_name": "Agile Board"
+    },
+    "columns": [
+      {
+        "id": "a7f3e0b4-31c7-4e88-a3a2-b5e2f6f8d9a1",
+        "name": "Todo",
+        "sort_order": 1
+      },
+      {
+        "id": "c5c3a6a0-1a3a-4c5d-9bde-27cba4e09c2f",
+        "name": "In Progress",
+        "sort_order": 2
+      },
+      {
+        "id": "f1c2d3e4-a5b6-7c8d-9e0f-123456789abc",
+        "name": "Done",
+        "sort_order": 3
+      }
+    ],
+    "task_types": [
+      {
+        "id": "c3d2b1a0-9e8f-7d6c-5b4a-3210fedcba98",
+        "name": "Task"
+      },
+      {
+        "id": "f9e8d7c6-b5a4-3210-1234-abcdefabcdef",
+        "name": "Bug"
+      }
+    ],
+    "chat_history": [
+      {
+        "role": "user",
+        "content": "Нужно доделать backend для agile доски"
+      },
+      {
+        "role": "assistant",
+        "content": "Хорошо, что именно нужно сделать?"
+      }
+    ],
+    "project_tasks": [
+      {
+        "id": "d3b07384-d9a4-4c8b-8c2a-9d8a7c6b5e4f",
+        "title": "Сделать API",
+        "description": "Поднять backend на FastAPI",
+        "column_name": "In Progress",
+        "due_date": "2026-03-15",
+        "priority": "medium",
+        "task_type_name": "Task"
+      }
+    ],
+    "current_date": "2026-03-07"
+  }
+}'
+
+{
+  "message_to_user": "Задача 'Сделать API' разбита на три подзадачи: 'Создать эндпоинты для задач', 'Настроить базу данных' и 'Добавить валидацию данных'. Они добавлены в колонку 'Todo' с указанными сроками и приоритетами. Основная задача обновлена с уточнением описания.",
+  "add_tasks": [
+    {
+      "title": "Создать эндпоинты для задач",
+      "description": "Реализовать CRUD операции для задач (создание, чтение, обновление, удаление)",
+      "column_name": "Todo",
+      "due_date": "2026-03-10",
+      "priority": "medium",
+      "task_type_name": "Task"
+    },
+    {
+      "title": "Настроить базу данных",
+      "description": "Подключить и настроить базу данных для хранения задач и их статусов",
+      "column_name": "Todo",
+      "due_date": "2026-03-12",
+      "priority": "medium",
+      "task_type_name": "Task"
+    },
+    {
+      "title": "Добавить валидацию данных",
+      "description": "Реализовать проверку входных данных для API (например, обязательные поля, форматы дат)",
+      "column_name": "Todo",
+      "due_date": "2026-03-14",
+      "priority": "low",
+      "task_type_name": "Task"
+    }
+  ],
+  "change_tasks": [
+    {
+      "title": "Сделать API",
+      "description": "Поднять backend на FastAPI и разбить на подзадачи",
+      "column_name": "In Progress",
+      "due_date": "2026-03-15",
+      "priority": "medium",
+      "task_type_name": "Task",
+      "id": "d3b07384-d9a4-4c8b-8c2a-9d8a7c6b5e4f"
+    }
+  ],
+  "delete_tasks": []
+}
+
+curl -X POST http://127.0.0.1:8000/llm/encouragement \
+-H "Content-Type: application/json" \
+-d '{
+  "context": {
+    "project": {
+      "project_id": "c1c36e3a-8a27-4e3b-9f8f-7a6a65c2b4b0",
+      "project_name": "Agile Board"
+    },
+    "columns": [
+      {
+        "id": "a7f3e0b4-31c7-4e88-a3a2-b5e2f6f8d9a1",
+        "name": "Todo",
+        "sort_order": 1
+      },
+      {
+        "id": "c5c3a6a0-1a3a-4c5d-9bde-27cba4e09c2f",
+        "name": "In Progress",
+        "sort_order": 2
+      },
+      {
+        "id": "f1c2d3e4-a5b6-7c8d-9e0f-123456789abc",
+        "name": "Done",
+        "sort_order": 3
+      }
+    ],
+    "task_types": [
+      {
+        "id": "c3d2b1a0-9e8f-7d6c-5b4a-3210fedcba98",
+        "name": "Task"
+      }
+    ],
+    "chat_history": [
+      {
+        "role": "user",
+        "content": "Что-то сегодня тяжело идет разработка"
+      }
+    ],
+    "project_tasks": [
+      {
+        "id": "d3b07384-d9a4-4c8b-8c2a-9d8a7c6b5e4f",
+        "title": "Сделать API",
+        "description": "Поднять backend на FastAPI",
+        "column_name": "In Progress",
+        "due_date": "2026-03-15",
+        "priority": "medium",
+        "task_type_name": "Task"
+      }
+    ],
+    "current_date": "2026-03-07"
+  }
+}'
+
+{
+  "message_to_user": "Вижу, что разработка сегодня идет тяжело, но ты уже в процессе работы над задачей 'Сделать API' в колонке In Progress. Каждый шаг вперед — это прогресс, продолжай в том же духе!",
+  "add_tasks": [],
+  "change_tasks": [],
+  "delete_tasks": []
+}
+
+curl -X POST http://127.0.0.1:8000/llm/chat \
+-H "Content-Type: application/json" \
+-d '{
+  "user_message": "Please split this API task into smaller subtasks",
+  "context": {
+    "project": {
+      "project_id": "c1c36e3a-8a27-4e3b-9f8f-7a6a65c2b4b0",
+      "project_name": "Agile Board"
+    },
+    "columns": [
+      {
+        "id": "a7f3e0b4-31c7-4e88-a3a2-b5e2f6f8d9a1",
+        "name": "Todo",
+        "sort_order": 1
+      },
+      {
+        "id": "c5c3a6a0-1a3a-4c5d-9bde-27cba4e09c2f",
+        "name": "In Progress",
+        "sort_order": 2
+      }
+    ],
+    "task_types": [
+      {
+        "id": "c3d2b1a0-9e8f-7d6c-5b4a-3210fedcba98",
+        "name": "Task"
+      }
+    ],
+    "chat_history": [
+      {
+        "role": "user",
+        "content": "I need help with API implementation"
+      }
+    ],
+    "project_tasks": [
+      {
+        "id": "d3b07384-d9a4-4c8b-8c2a-9d8a7c6b5e4f",
+        "title": "Implement API",
+        "description": "Build backend with FastAPI",
+        "column_name": "In Progress",
+        "due_date": "2026-03-15",
+        "priority": "medium",
+        "task_type_name": "Task"
+      }
+    ],
+    "current_date": "2026-03-07"
+  }
+}'
+
+{
+  "message_to_user": "I've split the API task into three smaller subtasks: design endpoints, implement authentication, and write unit tests. They've been added to the Todo column with due dates, and the original task has been updated to reflect the split.",
+  "add_tasks": [
+    {
+      "title": "Design API endpoints",
+      "description": "Define the structure and specifications for all API endpoints.",
+      "column_name": "Todo",
+      "due_date": "2026-03-10",
+      "priority": "medium",
+      "task_type_name": "Task"
+    },
+    {
+      "title": "Implement authentication",
+      "description": "Add user authentication and authorization to the API.",
+      "column_name": "Todo",
+      "due_date": "2026-03-12",
+      "priority": "medium",
+      "task_type_name": "Task"
+    },
+    {
+      "title": "Write unit tests",
+      "description": "Create tests for API endpoints to ensure functionality.",
+      "column_name": "Todo",
+      "due_date": "2026-03-14",
+      "priority": "low",
+      "task_type_name": "Task"
+    }
+  ],
+  "change_tasks": [
+    {
+      "title": "Implement API",
+      "description": "Build backend with FastAPI - split into subtasks.",
+      "column_name": "In Progress",
+      "due_date": "2026-03-15",
+      "priority": "medium",
+      "task_type_name": "Task",
+      "id": "d3b07384-d9a4-4c8b-8c2a-9d8a7c6b5e4f"
+    }
+  ],
+  "delete_tasks": []
+}
