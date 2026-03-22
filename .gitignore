@@ -21,5 +21,3 @@ __pycache__/
 venv/
 .venv/
 
-# Optional: hide env template too
-.env.example
