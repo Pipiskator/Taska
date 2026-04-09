@@ -1,6 +1,11 @@
-const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL ?? 'https://lwubemrxawortcoxzkcc.supabase.co'
-const SUPABASE_ANON_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY ?? 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imx3dWJlbXJ4YXdvcnRjb3h6a2NjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzM2NzA2NDEsImV4cCI6MjA4OTI0NjY0MX0.Ou73DA2seUojluqdEqrj2LULdQ-NX7cZONnczHqu910'
+import {createClient} from "@supabase/supabase-js";
 
+export const supabase = createClient(
+    import.meta.env.VITE_SUPABASE_URL,
+    import.meta.env.VITE_SUPABASE_ANON_KEY
+)
+const SUPABASE_URL=import.meta.env.VITE_SUPABASE_URL
+const SUPABASE_ANON_KEY=import.meta.env.VITE_SUPABASE_ANON_KEY
 const USER_KEY = 'taska_user'
 const TASK_SELECT = `
   id,user_id,title,description,due_date,created_at,status_id,priority_id,
@@ -12,9 +17,9 @@ const TASK_SELECT = `
 let refsPromise = null
 const PASSWORD_ITERATIONS = 120000
 
-function getUserId() {
-  const user = getUser()
-  return user?.id ?? null
+async function getUserId() {
+  const { data } = await supabase.auth.getUser()
+  return data?.user?.id ?? null
 }
 
 function mapTask(row) {
@@ -93,11 +98,15 @@ function extractErrorText(text) {
 }
 
 async function request(path, { method = 'GET', query, body, prefer } = {}) {
+  const { data: { session } } = await supabase.auth.getSession()
+
+  const token = session?.access_token
+
   const res = await fetch(makeUrl(path, query), {
     method,
     headers: {
       apikey: SUPABASE_ANON_KEY,
-      Authorization: `Bearer ${SUPABASE_ANON_KEY}`,
+      Authorization: `Bearer ${token}`,
       'Content-Type': 'application/json',
       ...(prefer ? { Prefer: prefer } : {}),
     },
@@ -160,7 +169,7 @@ async function upsertDependencies(taskId, dependsOn) {
 }
 
 async function syncTaskStatusWithSubtasks(taskId) {
-  const userId = getUserId()
+  const userId = await getUserId()
   if (!userId) return
 
   const subtasks = await request('subtasks', {
@@ -196,7 +205,7 @@ async function syncTaskStatusWithSubtasks(taskId) {
 }
 
 export async function getTasks() {
-  const userId = getUserId()
+  const userId = await getUserId()
   if (!userId) return []
 
   const rows = await request('tasks', {
@@ -211,7 +220,7 @@ export async function getTasks() {
 }
 
 export async function getTask(id) {
-  const userId = getUserId()
+  const userId = await getUserId()
   if (!userId) return null
 
   const taskId = Number(id)
@@ -230,7 +239,7 @@ export async function getTask(id) {
 }
 
 export async function createTask(data) {
-  const userId = getUserId()
+  const userId = await getUserId()
   if (!userId) throw new Error('User is not logged in')
 
   const refs = await getRefMaps()
@@ -259,7 +268,7 @@ export async function createTask(data) {
 }
 
 export async function updateTask(id, data) {
-  const userId = getUserId()
+  const userId = await getUserId()
   if (!userId) throw new Error('User is not logged in')
 
   const taskId = Number(id)
@@ -301,7 +310,7 @@ export async function updateTask(id, data) {
 }
 
 export async function deleteTask(id) {
-  const userId = getUserId()
+  const userId = await getUserId()
   if (!userId) return
 
   const taskId = Number(id)
@@ -476,82 +485,22 @@ export async function replaceSubtasks(taskId, subtasks) {
 }
 
 export async function login(email, password) {
-  const normalizedEmail = email.trim().toLowerCase()
-  if (!normalizedEmail || !password) return false
-
-  const users = await request('users', {
-    query: {
-      select: 'id,email,name,password_hash',
-      email: `eq.${normalizedEmail}`,
-      limit: 1,
-    },
+  const { data, error } = await supabase.auth.signInWithPassword({
+    email,
+    password
   })
 
-  const user = users[0]
-  if (!user) return false
-
-  const storedHash = user.password_hash ?? ''
-  const isLegacyPlain = !storedHash.startsWith('pbkdf2$')
-  const hashedInput = await hashPassword(password, normalizedEmail)
-
-  const isPasswordValid = storedHash === hashedInput || (isLegacyPlain && storedHash === password)
-  if (!isPasswordValid) return false
-
-  if (isLegacyPlain && storedHash === password) {
-    try {
-      await request('users', {
-        method: 'PATCH',
-        query: { id: `eq.${user.id}` },
-        body: { password_hash: hashedInput },
-        prefer: 'return=minimal',
-      })
-    } catch {}
-  }
-
-  localStorage.setItem(USER_KEY, JSON.stringify({
-    id: user.id,
-    email: user.email,
-    name: user.name,
-  }))
+  if (error) return false
   return true
 }
 
-export async function register({ name, email, password }) {
-  const normalizedEmail = email.trim().toLowerCase()
-  const normalizedName = name.trim()
-  if (!normalizedEmail || !password) return false
-
-  const passwordHash = await hashPassword(password, normalizedEmail)
-
-  const existingUsers = await request('users', {
-    query: {
-      select: 'id',
-      email: `eq.${normalizedEmail}`,
-      limit: 1,
-    },
+export async function register({ email, password }) {
+  const { data, error } = await supabase.auth.signUp({
+    email,
+    password
   })
 
-  if (existingUsers[0]) return false
-
-  const inserted = await request('users', {
-    method: 'POST',
-    query: { select: 'id,email,name' },
-    body: {
-      email: normalizedEmail,
-      password_hash: passwordHash,
-      name: normalizedName || normalizedEmail.split('@')[0] || 'user',
-    },
-    prefer: 'return=representation',
-  })
-
-  const user = inserted?.[0]
-  if (!user) throw new Error('User was not created')
-
-  localStorage.setItem(USER_KEY, JSON.stringify({
-    id: user.id,
-    email: user.email,
-    name: user.name,
-  }))
+  if (error) throw error
   return true
 }
 
@@ -570,14 +519,11 @@ export function humanizeApiError(error, fallback = 'Ошибка запроса'
   return `${fallback}: ${message}`
 }
 
-export function logout() {
-  localStorage.removeItem(USER_KEY)
+export async function logout() {
+  await supabase.auth.signOut()
 }
 
-export function getUser() {
-  try {
-    return JSON.parse(localStorage.getItem(USER_KEY))
-  } catch {
-    return null
-  }
+export async function getUser() {
+  const { data } = await supabase.auth.getUser()
+  return data?.user ?? null
 }

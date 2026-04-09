@@ -185,7 +185,7 @@ function showNotification(n, userId, isMobile) {
 
 export default function NotificationsListener() {
   const location = useLocation()
-  const [userId, setUserId] = useState(() => getUser()?.id ?? null)
+  const [userId, setUserId] = useState(null)
   const [isMobile, setIsMobile] = useState(() => window.innerWidth < MOBILE_BREAKPOINT)
   const shownTaskDone = useState(() => new Set())[0]
   const { toasts } = useToasterStore()
@@ -333,9 +333,23 @@ export default function NotificationsListener() {
   }
 
   useEffect(() => {
-    const nextUserId = getUser()?.id ?? null
-    setUserId(prev => (prev === nextUserId ? prev : nextUserId))
+    getUser().then(user => {
+      const nextUserId = user?.id ?? null
+      setUserId(prev => (prev === nextUserId ? prev : nextUserId))
+    })
   }, [location.pathname])
+
+  useEffect(() => {
+    // Загружаем сразу при монтировании
+    getUser().then(user => setUserId(user?.id ?? null))
+
+    // Подписываемся на события авторизации (логин/логаут)
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      setUserId(session?.user?.id ?? null)
+    })
+
+    return () => subscription.unsubscribe()
+  }, [])
 
   useEffect(() => {
     shownTaskDone.clear()
