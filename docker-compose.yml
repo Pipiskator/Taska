@@ -1,0 +1,17 @@
+services:
+  frontend:
+    build: .
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - /etc/letsencrypt:/etc/letsencrypt:ro
+    depends_on:
+      - backend
+    restart: unless-stopped
+
+  backend:
+    build: ./llm-module
+    env_file:
+      - .env
+    restart: unless-stopped
